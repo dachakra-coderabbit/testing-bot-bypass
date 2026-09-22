@@ -1,0 +1,56 @@
+name: Create test PR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Add random code and open PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          BRANCH="test-pr-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          git switch -c "$BRANCH"
+
+          mkdir -p review-samples
+          cat > "review-samples/orders-$RANDOM.js" <<EOF
+          export function calculateTotal(orders) {
+            let total = 0;
+            for (let i = 0; i <= orders.length; i++) {
+              total += orders[i].price;
+            }
+            return total;
+          }
+
+          export function average(values) {
+            return values.reduce((sum, value) => sum + value, 0) / values.length;
+          }
+
+          export function applyDiscount(price) {
+            const discountPercent = $((RANDOM % 40 + 10));
+            return price - discountPercent;
+          }
+          EOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add review-samples/
+          git commit -m "Add order calculation helpers"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --base "$BASE_BRANCH" \
+            --head "$BRANCH" \
+            --title "Add order calculation helpers" \
+            --body "Adds helpers for totals, averages, and discounts."
