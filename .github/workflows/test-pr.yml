@@ -55,5 +55,5 @@ jobs:
             --title "Add order calculation helpers" \
             --body "Adds helpers for totals, averages, and discounts."
             
-          <!-- coderabbit-review -->"
+          <!-- coderabbit-review -->
 
